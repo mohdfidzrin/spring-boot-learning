@@ -3,9 +3,9 @@ package com.example.demo.controller;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.User;
 import com.example.demo.service.UserDao;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -37,11 +37,20 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User retrieveUser(@PathVariable int id) {
+    public EntityModel<User> retrieveUser(@PathVariable int id) {
         User user = userService.findOne(id);
         if( user == null )
             throw new UserNotFoundException("id-"+id);
-        return user;
+
+        EntityModel<User> model = new EntityModel<>(user);
+        WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
+                                            .linkTo(
+                                                    WebMvcLinkBuilder
+                                                            .methodOn(this.getClass())
+                                                            .retrieveAllUsers()
+                                            );
+        model.add(linkTo.withRel("all-users"));
+        return model;
     }
 
 
