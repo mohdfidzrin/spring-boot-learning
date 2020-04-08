@@ -1,7 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.model.Post;
 import com.example.demo.model.User;
+import com.example.demo.repository.UserRepo;
 import com.example.demo.service.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
@@ -13,22 +15,25 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("users")
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     private UserDao userService;
+    @Autowired
+    private UserRepo userRepo;
 
-    @GetMapping("/")
+    @GetMapping({"/",""})
     public List<User> retrieveAllUsers() {
-        return userService.findAll();
+        return userRepo.findAll();
     }
 
     @PostMapping("/")
     public ResponseEntity<Object> createUser(@RequestBody User user) {
-        User savedUser = userService.save(user);
+        User savedUser = userRepo.save(user);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -39,11 +44,11 @@ public class UserController {
 
     @GetMapping("/{id}")
     public EntityModel<User> retrieveUser(@PathVariable int id) {
-        User user = userService.findOne(id);
-        if( user == null )
+        Optional<User> user = userRepo.findById(id);
+        if(!user.isPresent())
             throw new UserNotFoundException("id-"+id);
 
-        EntityModel<User> model = new EntityModel<>(user);
+        EntityModel<User> model = new EntityModel<>(user.get());
         WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
                 .linkTo(
                         WebMvcLinkBuilder
@@ -70,17 +75,21 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<List<User>> deleteUser(@PathVariable int id) {
+    public void deleteUser(@PathVariable int id) {
         try {
-            List<User> users = userService.deleteUser(id);
-            return new ResponseEntity<>(
-                    users,
-                    HttpStatus.OK);
+            userRepo.deleteById(id);
         }catch (Exception ex) {
             ex.printStackTrace();
-            return new ResponseEntity<>( null, HttpStatus.NOT_FOUND );
         }
     }
 
+    @GetMapping("/{id}/posts")
+    public List<Post> retrieveAllUsers(@PathVariable int id) {
+        Optional<User> userOptional = userRepo.findById(id);
+        if(!userOptional.isPresent())
+            throw new UserNotFoundException("id-" +id);
+
+        return userOptional.get().getPosts();
+    }
 
 }
