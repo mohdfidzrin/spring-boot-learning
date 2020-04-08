@@ -3,9 +3,7 @@ package com.example.demo.service;
 import com.example.demo.model.User;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class UserDao {
@@ -38,5 +36,33 @@ public class UserDao {
             }
         }
         return null;
+    }
+    //TODO: add exception for updating & deleting user that isnt in the Collection
+    public User updateUser(User user) {
+        users.stream()
+                .filter(e -> e.getId().equals(user.getId()))
+                .forEach(e -> {
+                    e.setName(user.getName());
+                    e.setBirthDate(user.getBirthDate());
+                });
+        return user;
+    }
+
+    public List<User> deleteUser(int id) {
+        try {
+            /*
+            Iterator itr = users.iterator();
+            while (itr.hasNext()) {
+                User user = (User) itr.next();
+                if(user.getId() == id) {
+                    itr.remove();
+                }
+            } */
+            // use above method if you are using java version < 8
+            users.removeIf(e -> e.getId().equals(id));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return this.findAll();
     }
 }

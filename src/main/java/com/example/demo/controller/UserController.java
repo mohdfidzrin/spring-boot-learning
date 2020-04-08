@@ -6,6 +6,7 @@ import com.example.demo.service.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -44,13 +45,41 @@ public class UserController {
 
         EntityModel<User> model = new EntityModel<>(user);
         WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
-                                            .linkTo(
-                                                    WebMvcLinkBuilder
-                                                            .methodOn(this.getClass())
-                                                            .retrieveAllUsers()
-                                            );
+                .linkTo(
+                        WebMvcLinkBuilder
+                                .methodOn(this.getClass())
+                                .retrieveAllUsers());
         model.add(linkTo.withRel("all-users"));
         return model;
+    }
+
+    @PutMapping("/{id}")
+    public EntityModel<User> updateUser(@PathVariable int id, @RequestBody User user) {
+        if( user == null )
+            throw new UserNotFoundException("Not Found");
+
+        User updatedUser = userService.updateUser(user);
+        EntityModel<User> model = new EntityModel<>(user);
+        WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
+                .linkTo(
+                        WebMvcLinkBuilder
+                                .methodOn(this.getClass())
+                                .retrieveAllUsers());
+        model.add(linkTo.withRel("all-users"));
+        return model;
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<List<User>> deleteUser(@PathVariable int id) {
+        try {
+            List<User> users = userService.deleteUser(id);
+            return new ResponseEntity<>(
+                    users,
+                    HttpStatus.OK);
+        }catch (Exception ex) {
+            ex.printStackTrace();
+            return new ResponseEntity<>( null, HttpStatus.NOT_FOUND );
+        }
     }
 
 
