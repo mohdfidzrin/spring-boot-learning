@@ -6,9 +6,8 @@ import com.example.demo.model.User;
 import com.example.demo.repository.UserRepo;
 import com.example.demo.service.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -43,15 +42,15 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public EntityModel<User> retrieveUser(@PathVariable int id) {
+    public Resource<User> retrieveUser(@PathVariable int id) {
         Optional<User> user = userRepo.findById(id);
         if(!user.isPresent())
             throw new UserNotFoundException("id-"+id);
 
-        EntityModel<User> model = new EntityModel<>(user.get());
-        WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
+        Resource<User> model = new Resource<>(user.get());
+        ControllerLinkBuilder linkTo = ControllerLinkBuilder
                 .linkTo(
-                        WebMvcLinkBuilder
+                        ControllerLinkBuilder
                                 .methodOn(this.getClass())
                                 .retrieveAllUsers());
         model.add(linkTo.withRel("all-users"));
@@ -59,15 +58,15 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public EntityModel<User> updateUser(@PathVariable int id, @RequestBody User user) {
+    public Resource<User> updateUser(@PathVariable int id, @RequestBody User user) {
         if( user == null )
             throw new UserNotFoundException("Not Found");
 
         User updatedUser = userService.updateUser(user);
-        EntityModel<User> model = new EntityModel<>(user);
-        WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
+        Resource<User> model = new Resource<>(user);
+        ControllerLinkBuilder linkTo = ControllerLinkBuilder
                 .linkTo(
-                        WebMvcLinkBuilder
+                        ControllerLinkBuilder
                                 .methodOn(this.getClass())
                                 .retrieveAllUsers());
         model.add(linkTo.withRel("all-users"));
@@ -84,7 +83,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/posts")
-    public List<Post> retrieveAllUsers(@PathVariable int id) {
+    public List<Post> retrieveAllPostByUser(@PathVariable int id) {
         Optional<User> userOptional = userRepo.findById(id);
         if(!userOptional.isPresent())
             throw new UserNotFoundException("id-" +id);
