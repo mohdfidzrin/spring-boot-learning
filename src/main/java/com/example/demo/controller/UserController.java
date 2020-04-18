@@ -8,6 +8,7 @@ import com.example.demo.service.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,23 +26,27 @@ public class UserController {
     @Autowired
     private UserRepo userRepo;
 
-    @GetMapping({"/",""})
+    @CrossOrigin("http://localhost")
+    @GetMapping(value = {"/",""}, produces = "application/json")
     public List<User> retrieveAllUsers() {
         return userRepo.findAll();
     }
 
-    @PostMapping("/")
-    public ResponseEntity<Object> createUser(@RequestBody User user) {
+    @CrossOrigin("http://localhost")
+    @PostMapping(value = "/", produces = "application/json")
+    public User createUser(@RequestBody User user) {
         User savedUser = userRepo.save(user);
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(savedUser.getId())
-                .toUri();
-        return ResponseEntity.created(location).build();
+//        URI location = ServletUriComponentsBuilder
+//                .fromCurrentRequest()
+//                .path("/{id}")
+//                .buildAndExpand(savedUser.getId())
+//                .toUri();
+
+        return savedUser;
     }
 
-    @GetMapping("/{id}")
+    @CrossOrigin("http://localhost")
+    @GetMapping(value = "/{id}", produces = "application/json")
     public Resource<User> retrieveUser(@PathVariable int id) {
         Optional<User> user = userRepo.findById(id);
         if(!user.isPresent())
